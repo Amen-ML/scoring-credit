@@ -57,7 +57,7 @@ Pour qui : un organisme de crédit qui prête à des clients ayant peu ou pas d'
 scoring-credit/
 ├── data/raw/          # fichiers Kaggle téléchargés (non versionnés)
 ├── data/processed/    # train.parquet et test.parquet préparés (non versionnés)
-├── notebooks/         # 01 exploration, puis un notebook par famille de modèles
+├── notebooks/         # 01 exploration, 02 baselines et régression logistique, puis les arbres
 ├── src/
 │   ├── download_data.py   # téléchargement des fichiers Kaggle
 │   └── prepare_data.py    # découpage 80 / 20, nettoyage, ratios et agrégats de bureau.csv
@@ -84,7 +84,18 @@ python src/prepare_data.py    # construit data/processed/train.parquet et test.p
 
 ## Résultats
 
-À venir.
+Résultats provisoires, en validation croisée stratifiée à 5 plis sur le jeu d'apprentissage (246 008 prêts). Le jeu de test n'est pas encore utilisé.
+
+| Modèle | Variables | ROC AUC | PR AUC |
+|---|---|---|---|
+| Baseline : personne ne fait défaut | 0 | 0,500 | 0,081 |
+| Baseline : moyenne des scores externes (sans apprentissage) | 3 | 0,716 | 0,189 |
+| Régression logistique lisible (grille de score, statsmodels) | 15 | 0,740 | 0,218 |
+| Régression logistique complète (pipeline scikit-learn) | 82 | 0,747 | 0,227 |
+
+- Les 10 % de clients jugés les plus risqués par la régression logistique regroupent 32 % des défauts.
+- Dans la grille de score, +0,1 sur le score externe `EXT_SOURCE_3` multiplie la cote de défaut par 0,75, et des études supérieures par 0,68.
+- L'âge, très lié au défaut quand on le regarde seul, n'est plus significatif une fois les scores externes et l'emploi pris en compte.
 
 ## Inspirations
 
