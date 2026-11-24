@@ -21,7 +21,7 @@ Pour qui : un organisme de crédit qui prête à des clients ayant peu ou pas d'
 
 - **Uniquement `application_train.csv` (+ `bureau.csv`)** : le fichier `application_test.csv` de Kaggle n'a pas d'étiquettes, il ne permet donc pas de mesurer l'erreur. Je découpe `application_train.csv` en un jeu d'apprentissage (80 %) et un jeu de test (20 %).
 - **Découpage aléatoire stratifié** : contrairement au projet de prix immobiliers, les demandes ne sont pas datées, il n'y a donc pas de découpage temporel possible. La stratification garde la même proportion de défauts (8 %) dans les deux jeux. Le jeu de test n'est utilisé qu'une seule fois, à la fin.
-- **Variables exclues pour des raisons éthiques** : le sexe (`CODE_GENDER`) n'entre pas dans le modèle. Refuser un crédit en fonction du sexe est discriminatoire, et l'AI Act européen classe le scoring crédit des particuliers parmi les systèmes d'IA « à haut risque », qui doivent être explicables et non discriminatoires.
+- **Variables exclues pour des raisons éthiques** : le sexe (`CODE_GENDER`) n'entre pas dans le modèle. Refuser un crédit en fonction du sexe est discriminatoire, et l'AI Act européen classe le scoring crédit des particuliers parmi les systèmes d'IA « à haut risque », qui doivent être explicables et non discriminatoires. Retirer la colonne ne suffit pas, car d'autres variables reflètent le sexe (95 % des chauffeurs sont des hommes, 97 % des comptables sont des femmes) : un contrôle d'équité du modèle final est donc prévu.
 - **Les autres fichiers de la compétition** (anciennes demandes chez Home Credit, historiques de paiements mensuels) sont laissés de côté : `bureau.csv` suffit à montrer l'agrégation de plusieurs lignes par client sans dépasser la mémoire d'un ordinateur portable.
 
 ## Démarche prévue
@@ -35,7 +35,7 @@ Pour qui : un organisme de crédit qui prête à des clients ayant peu ou pas d'
 7. Nouvelles variables : ratios (crédit / revenu, annuité / revenu, âge, ancienneté dans l'emploi) et agrégats de l'historique de crédit (`bureau.csv`)
 8. Déséquilibre des classes : comparer l'absence de correction, la pondération des classes (`class_weight`, `scale_pos_weight`) et le sous-échantillonnage
 9. Seuil de décision : choisir le seuil qui minimise le coût métier, vérifier la calibration des probabilités
-10. Interprétabilité : variables les plus importantes et explication d'une décision individuelle avec SHAP
+10. Interprétabilité et équité : variables les plus importantes et explication d'une décision individuelle avec SHAP, puis comparaison des taux de refus et des erreurs entre hommes et femmes (le sexe sert à l'audit, jamais à la décision)
 11. Application Streamlit : saisir le dossier d'un client et obtenir sa probabilité de défaut, la décision (accord ou refus) et les raisons principales de cette décision
 
 ## Mesure de l'erreur
@@ -48,7 +48,7 @@ Pour qui : un organisme de crédit qui prête à des clients ayant peu ou pas d'
 
 ## Notions et outils
 
-- **Notions** : classification binaire, régression logistique (sigmoïde, log-loss, odds ratios), arbre de décision (Gini, profondeur), méthodes d'ensemble (bagging avec Random Forest, boosting avec XGBoost), validation croisée stratifiée, réglage des hyperparamètres, déséquilibre des classes, courbes ROC et précision-rappel, matrice de confusion, seuil de décision et coût métier, calibration, valeurs SHAP, création de variables, pipeline scikit-learn
+- **Notions** : classification binaire, régression logistique (sigmoïde, log-loss, odds ratios), arbre de décision (Gini, profondeur), méthodes d'ensemble (bagging avec Random Forest, boosting avec XGBoost), validation croisée stratifiée, réglage des hyperparamètres, déséquilibre des classes, courbes ROC et précision-rappel, matrice de confusion, seuil de décision et coût métier, calibration, valeurs SHAP, équité d'un modèle, création de variables, pipeline scikit-learn
 - **Outils** : Python, pandas, NumPy, Matplotlib, Seaborn, scikit-learn, XGBoost, SHAP, statsmodels, Jupyter, API Kaggle, Streamlit, Git
 
 ## Structure du projet
