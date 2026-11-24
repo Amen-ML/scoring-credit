@@ -56,10 +56,11 @@ Pour qui : un organisme de crédit qui prête à des clients ayant peu ou pas d'
 ```
 scoring-credit/
 ├── data/raw/          # fichiers Kaggle téléchargés (non versionnés)
-├── data/processed/    # tables préparées (non versionnées)
-├── notebooks/         # exploration, puis un notebook par famille de modèles
+├── data/processed/    # train.parquet et test.parquet préparés (non versionnés)
+├── notebooks/         # 01 exploration, puis un notebook par famille de modèles
 ├── src/
-│   └── download_data.py   # téléchargement des fichiers Kaggle
+│   ├── download_data.py   # téléchargement des fichiers Kaggle
+│   └── prepare_data.py    # découpage 80 / 20, nettoyage, ratios et agrégats de bureau.csv
 ├── models/            # modèle entraîné utilisé par l'application
 ├── requirements-dev.txt   # environnement complet : notebooks, entraînement
 └── README.md
@@ -78,6 +79,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements-dev.txt
 python src/download_data.py   # télécharge application_train.csv, bureau.csv et la description des colonnes
+python src/prepare_data.py    # construit data/processed/train.parquet et test.parquet
 ```
 
 ## Résultats
