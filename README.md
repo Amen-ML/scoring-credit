@@ -57,7 +57,7 @@ Pour qui : un organisme de crédit qui prête à des clients ayant peu ou pas d'
 scoring-credit/
 ├── data/raw/          # fichiers Kaggle téléchargés (non versionnés)
 ├── data/processed/    # train.parquet et test.parquet préparés (non versionnés)
-├── notebooks/         # 01 exploration, 02 baselines et régression logistique, puis les arbres
+├── notebooks/         # 01 exploration, 02 baselines et régression logistique, 03 arbre, Random Forest et XGBoost
 ├── src/
 │   ├── download_data.py   # téléchargement des fichiers Kaggle
 │   └── prepare_data.py    # découpage 80 / 20, nettoyage, ratios et agrégats de bureau.csv
@@ -89,13 +89,18 @@ Résultats provisoires, en validation croisée stratifiée à 5 plis sur le jeu 
 | Modèle | Variables | ROC AUC | PR AUC |
 |---|---|---|---|
 | Baseline : personne ne fait défaut | 0 | 0,500 | 0,081 |
+| Arbre de décision (profondeur 6) | 82 | 0,714 | 0,186 |
 | Baseline : moyenne des scores externes (sans apprentissage) | 3 | 0,716 | 0,189 |
 | Régression logistique lisible (grille de score, statsmodels) | 15 | 0,740 | 0,218 |
+| Random Forest (200 arbres) | 82 | 0,743 | 0,223 |
 | Régression logistique complète (pipeline scikit-learn) | 82 | 0,747 | 0,227 |
+| **XGBoost (profondeur 3, early stopping)** | 82 | **0,756** | **0,240** |
 
 - Les 10 % de clients jugés les plus risqués par la régression logistique regroupent 32 % des défauts.
 - Dans la grille de score, +0,1 sur le score externe `EXT_SOURCE_3` multiplie la cote de défaut par 0,75, et des études supérieures par 0,68.
 - L'âge, très lié au défaut quand on le regarde seul, n'est plus significatif une fois les scores externes et l'emploi pris en compte.
+- Un arbre seul sur-apprend dès la profondeur 10 (AUC de 0,822 sur l'entraînement mais 0,650 en validation à la profondeur 15).
+- XGBoost bat la régression logistique sur chacun des 5 plis (+0,009 en moyenne) : un gain petit mais systématique.
 
 ## Inspirations
 
