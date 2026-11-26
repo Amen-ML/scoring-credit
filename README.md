@@ -32,7 +32,7 @@ Pour qui : un organisme de crédit qui prête à des clients ayant peu ou pas d'
 4. Régression logistique : imputation des valeurs manquantes, standardisation et one-hot encoding dans un `Pipeline` scikit-learn ; lecture des coefficients en odds ratios
 5. Arbre de décision : critère de Gini, profondeur, sur-apprentissage, lecture des règles
 6. Random Forest puis XGBoost : bagging contre boosting, réglage des hyperparamètres par validation croisée stratifiée, early stopping
-7. Nouvelles variables : ratios (crédit / revenu, annuité / revenu, âge, ancienneté dans l'emploi) et agrégats de l'historique de crédit (`bureau.csv`)
+7. Nouvelles variables : ratios (crédit / revenu, annuité / revenu, crédit / annuité, prix du bien / crédit) et agrégats de l'historique de crédit (`bureau.csv`)
 8. Déséquilibre des classes : comparer l'absence de correction, la pondération des classes (`class_weight`, `scale_pos_weight`) et le sous-échantillonnage
 9. Seuil de décision : choisir le seuil qui minimise le coût métier, vérifier la calibration des probabilités
 10. Interprétabilité et équité : variables les plus importantes et explication d'une décision individuelle avec SHAP, puis comparaison des taux de refus et des erreurs entre hommes et femmes (le sexe sert à l'audit, jamais à la décision)
@@ -48,7 +48,7 @@ Pour qui : un organisme de crédit qui prête à des clients ayant peu ou pas d'
 
 ## Notions et outils
 
-- **Notions** : classification binaire, régression logistique (sigmoïde, log-loss, odds ratios), arbre de décision (Gini, profondeur), méthodes d'ensemble (bagging avec Random Forest, boosting avec XGBoost), validation croisée stratifiée, réglage des hyperparamètres, déséquilibre des classes, courbes ROC et précision-rappel, matrice de confusion, seuil de décision et coût métier, calibration, valeurs SHAP, équité d'un modèle, création de variables, pipeline scikit-learn
+- **Notions** : classification binaire, régression logistique (sigmoïde, log-loss, odds ratios), arbre de décision (Gini, profondeur), méthodes d'ensemble (bagging avec Random Forest, boosting avec XGBoost), validation croisée stratifiée, réglage des hyperparamètres, déséquilibre des classes, courbes ROC et précision-rappel, matrice de confusion, seuil de décision et coût métier, calibration, valeurs SHAP, équité d'un modèle, création de variables, discrétisation en tranches, pipeline scikit-learn
 - **Outils** : Python, pandas, NumPy, Matplotlib, Seaborn, scikit-learn, XGBoost, SHAP, statsmodels, Jupyter, API Kaggle, Streamlit, Git
 
 ## Structure du projet
@@ -57,7 +57,7 @@ Pour qui : un organisme de crédit qui prête à des clients ayant peu ou pas d'
 scoring-credit/
 ├── data/raw/          # fichiers Kaggle téléchargés (non versionnés)
 ├── data/processed/    # train.parquet et test.parquet préparés (non versionnés)
-├── notebooks/         # 01 exploration, 02 baselines et régression logistique, 03 arbre, Random Forest et XGBoost
+├── notebooks/         # 01 exploration, 02 baselines et régression logistique, 03 arbre, Random Forest et XGBoost, 04 nouvelles variables
 ├── src/
 │   ├── download_data.py   # téléchargement des fichiers Kaggle
 │   └── prepare_data.py    # découpage 80 / 20, nettoyage, ratios et agrégats de bureau.csv
@@ -94,13 +94,20 @@ Résultats provisoires, en validation croisée stratifiée à 5 plis sur le jeu 
 | Régression logistique lisible (grille de score, statsmodels) | 15 | 0,740 | 0,218 |
 | Random Forest (200 arbres) | 82 | 0,743 | 0,223 |
 | Régression logistique complète (pipeline scikit-learn) | 82 | 0,747 | 0,227 |
-| **XGBoost (profondeur 3, early stopping)** | 82 | **0,756** | **0,240** |
+| Régression logistique + nouvelles variables | 99 | 0,752 | 0,233 |
+| XGBoost (profondeur 3, early stopping) | 82 | 0,756 | 0,240 |
+| Régression logistique + nouvelles variables + tranches du ratio crédit / annuité | 99 | 0,763 | 0,247 |
+| **XGBoost + nouvelles variables** | 99 | **0,769** | **0,255** |
 
 - Les 10 % de clients jugés les plus risqués par la régression logistique regroupent 32 % des défauts.
 - Dans la grille de score, +0,1 sur le score externe `EXT_SOURCE_3` multiplie la cote de défaut par 0,75, et des études supérieures par 0,68.
 - L'âge, très lié au défaut quand on le regarde seul, n'est plus significatif une fois les scores externes et l'emploi pris en compte.
 - Un arbre seul sur-apprend dès la profondeur 10 (AUC de 0,822 sur l'entraînement mais 0,650 en validation à la profondeur 15).
 - XGBoost bat la régression logistique sur chacun des 5 plis (+0,009 en moyenne) : un gain petit mais systématique.
+- Les 17 nouvelles variables (ratios et historique de `bureau.csv`) rapportent plus que le changement d'algorithme : +0,013 pour XGBoost et +0,016 pour la logistique, sur chacun des 5 plis.
+- La plus utile, le ratio crédit / annuité, a un lien en dents de scie avec le défaut : presque inutile seule (AUC 0,533), elle arrive 4ᵉ dans XGBoost. La logistique n'en profite qu'une fois le ratio découpé en tranches.
+- Un ratio mis en logarithme n'apporte rien à une régression logistique qui contient déjà le logarithme de chaque montant (+0,0002).
+- **Limite** : ce ratio reflète probablement la grille tarifaire de Home Credit (durée et taux du prêt). Si le taux est fixé selon le risque perçu, le modèle réutilise en partie l'évaluation déjà faite par le prêteur.
 
 ## Inspirations
 
